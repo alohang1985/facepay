@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.database import init_db
-from app.routers import auth, faces, licenses, dashboard, admin, wishlist, reviews, apikeys, messaging, notifications, subscriptions
+from app.routers import auth, faces, licenses, dashboard, admin, wishlist, reviews, apikeys, messaging, notifications, subscriptions, protection
 
 settings = get_settings()
 
@@ -35,6 +35,7 @@ app.include_router(apikeys.router, prefix="/api")
 app.include_router(messaging.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(subscriptions.router, prefix="/api")
+app.include_router(protection.router, prefix="/api")
 
 
 @app.on_event("startup")

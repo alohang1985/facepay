@@ -116,6 +116,26 @@ export const authExtra = {
   resetPassword: (token, new_password) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, new_password }) }),
 };
 
+export const protection = {
+  watermarked: (faceId) => request(`/protection/watermarked/${faceId}`),
+  scan: (data) => request('/protection/scan', { method: 'POST', body: JSON.stringify(data) }),
+  confirmScan: (scanId, confirmed) => request(`/protection/scan/${scanId}/confirm`, { method: 'PATCH', body: JSON.stringify({ confirmed }) }),
+  dmca: (scanId) => request(`/protection/scan/${scanId}/dmca`),
+  myScans: () => request('/protection/my-scans'),
+  registerUsage: (data) => request('/protection/usage-url', { method: 'POST', body: JSON.stringify(data) }),
+  usageUrls: (licenseId) => request(`/protection/usage-urls/${licenseId}`),
+  createDispute: (data) => request('/protection/disputes', { method: 'POST', body: JSON.stringify(data) }),
+  myDisputes: () => request('/protection/disputes'),
+  trackView: (faceId, viewerId) => request(`/protection/view/${faceId}`, { method: 'POST' }),
+  analytics: (faceId) => request(`/protection/analytics/${faceId}`),
+  priceRecommend: (params) => request(`/protection/price-recommendation?${new URLSearchParams(params)}`),
+  alsoViewed: (faceId) => request(`/protection/also-viewed/${faceId}`),
+};
+
+export const provider = {
+  profile: (userId) => request(`/auth/provider/${userId}`),
+};
+
 export const admin = {
   stats: () => request('/admin/stats'),
   users: (limit = 50) => request(`/admin/users?limit=${limit}`),

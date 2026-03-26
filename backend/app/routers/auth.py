@@ -141,6 +141,36 @@ class _ResetPassword(BaseModel):
     token: str
     new_password: str
 
+@router.get("/provider/{user_id}")
+async def get_provider_profile(user_id: str):
+    """Public provider portfolio."""
+    db = get_db()
+    try:
+        user = db.execute("SELECT id, name, avatar_url, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="Provider not found")
+
+        faces = db.execute("SELECT * FROM faces WHERE user_id = ? AND verified = 1 ORDER BY created_at DESC", (user_id,)).fetchall()
+        total_sales = db.execute("SELECT COUNT(*) FROM licenses WHERE provider_id = ?", (user_id,)).fetchone()[0]
+        total_earned = db.execute("SELECT COALESCE(SUM(price_paid), 0) FROM licenses WHERE provider_id = ?", (user_id,)).fetchone()[0]
+        avg_rating = db.execute(
+            "SELECT AVG(r.rating) FROM reviews r JOIN faces f ON r.face_id = f.id WHERE f.user_id = ?", (user_id,)
+        ).fetchone()[0]
+
+        return {
+            "provider": dict_row(user),
+            "faces": dict_rows(faces),
+            "stats": {
+                "total_faces": len(faces),
+                "total_sales": total_sales,
+                "total_earned": round(total_earned, 2),
+                "avg_rating": round(avg_rating or 0, 1),
+            },
+        }
+    finally:
+        db.close()
+
+
 @router.post("/reset-password")
 async def reset_password(body: _ResetPassword):
     user_id = _reset_tokens.pop(body.token, None)

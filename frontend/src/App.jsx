@@ -21,6 +21,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import PricingPage from './pages/PricingPage';
 import RankingsPage from './pages/RankingsPage';
 import ComparePage from './pages/ComparePage';
+import ProviderPage from './pages/ProviderPage';
+import ProtectionPage from './pages/ProtectionPage';
 
 export default function App() {
   return (
@@ -36,6 +38,7 @@ export default function App() {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/rankings" element={<RankingsPage />} />
         <Route path="/compare" element={<ComparePage />} />
+        <Route path="/provider/:id" element={<ProviderPage />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
@@ -47,6 +50,7 @@ export default function App() {
         <Route path="/earnings" element={<ProtectedRoute><EarningsPage /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/api-keys" element={<ProtectedRoute><ApiKeysPage /></ProtectedRoute>} />
+        <Route path="/protection" element={<ProtectedRoute><ProtectionPage /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />

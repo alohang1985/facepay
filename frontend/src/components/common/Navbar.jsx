@@ -30,6 +30,7 @@ export default function Navbar() {
     { to: '/wishlist', label: t('wishlist') },
     { to: '/earnings', label: t('earnings') },
     { to: '/messages', label: 'Messages' },
+    { to: '/protection', label: '🛡️ Protection' },
     { to: '/api-keys', label: 'API Keys' },
     { to: '/profile', label: t('profile') },
   ] : [];

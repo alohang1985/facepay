@@ -168,6 +168,49 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS face_views (
+            id TEXT PRIMARY KEY,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            viewer_id TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS usage_urls (
+            id TEXT PRIMARY KEY,
+            license_id TEXT REFERENCES licenses(id) ON DELETE CASCADE,
+            url TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            verified INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS disputes (
+            id TEXT PRIMARY KEY,
+            license_id TEXT REFERENCES licenses(id),
+            reporter_id TEXT REFERENCES users(id),
+            against_id TEXT REFERENCES users(id),
+            reason TEXT NOT NULL,
+            evidence TEXT DEFAULT '',
+            status TEXT DEFAULT 'open' CHECK (status IN ('open', 'investigating', 'resolved_buyer', 'resolved_provider', 'dismissed')),
+            admin_notes TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            resolved_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS misuse_scans (
+            id TEXT PRIMARY KEY,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            provider_id TEXT REFERENCES users(id),
+            stage INTEGER DEFAULT 1,
+            match_score REAL DEFAULT 0,
+            source_url TEXT DEFAULT '',
+            provider_confirmed INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'dismissed', 'dmca_sent')),
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_face_views ON face_views(face_id);
+        CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
         CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
         CREATE INDEX IF NOT EXISTS idx_reviews_face ON reviews(face_id);
         CREATE INDEX IF NOT EXISTS idx_messages_to ON messages(to_user_id);
@@ -178,6 +221,20 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_licenses_provider ON licenses(provider_id);
         CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id);
     """)
+
+    # Add columns if missing (safe migration)
+    try:
+        cur.execute("ALTER TABLE licenses ADD COLUMN exclusive INTEGER DEFAULT 0")
+    except:
+        pass
+    try:
+        cur.execute("ALTER TABLE licenses ADD COLUMN exclusive_industry TEXT DEFAULT ''")
+    except:
+        pass
+    try:
+        cur.execute("ALTER TABLE faces ADD COLUMN view_count INTEGER DEFAULT 0")
+    except:
+        pass
 
     # Seed data if empty
     count = cur.execute("SELECT COUNT(*) FROM users").fetchone()[0]
