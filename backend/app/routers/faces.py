@@ -3,7 +3,6 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import Optional
 from app.core.security import get_current_user
 from app.core.database import get_db, dict_row, dict_rows, new_id
-from app.services.face_analyzer import analyze_face
 
 router = APIRouter(prefix="/faces", tags=["faces"])
 
@@ -18,6 +17,7 @@ async def analyze_face_photo(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Image too large. Max 10MB.")
 
     try:
+        from app.services.face_analyzer import analyze_face
         result = analyze_face(contents)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Face analysis failed: {str(e)}")
