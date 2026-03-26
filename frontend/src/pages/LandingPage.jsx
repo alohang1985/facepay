@@ -1,8 +1,17 @@
 import { Link } from 'react-router-dom';
-import { faces } from '../data/faces';
+import { useState, useEffect } from 'react';
+import { faces as localFaces } from '../data/faces';
+import { faces as facesApi } from '../services/api';
 import FaceCard from '../components/common/FaceCard';
 
 export default function LandingPage() {
+  const [faces, setFaces] = useState(localFaces);
+
+  useEffect(() => {
+    facesApi.list({ limit: 12 })
+      .then((data) => { if (data.faces?.length) setFaces(data.faces); })
+      .catch(() => {}); // fallback to local data
+  }, []);
   return (
     <>
       {/* Hero - Full Screen */}
@@ -112,7 +121,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {faces.slice(4, 6).map((face) => (
             <Link key={face.id} to={`/face/${face.id}`} className="group relative aspect-[16/9] rounded-2xl overflow-hidden no-underline">
-              <img src={face.photo} alt={face.name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+              <img src={face.photo_url || face.photo} alt={face.name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-7 flex justify-between items-end">
                 <div>

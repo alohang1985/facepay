@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 
+const PLACEHOLDER = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face';
+
 export default function FaceCard({ face, large }) {
+  const photo = face.photo_url || face.photo || PLACEHOLDER;
+
   return (
     <Link
       to={`/face/${face.id}`}
@@ -8,7 +12,7 @@ export default function FaceCard({ face, large }) {
     >
       <div className={`relative overflow-hidden ${large ? 'aspect-[3/4]' : 'aspect-[3/4]'}`}>
         <img
-          src={face.photo}
+          src={photo}
           alt={face.name}
           className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         />
