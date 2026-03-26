@@ -104,18 +104,23 @@ async def get_face(face_id: str):
         db.close()
 
 
+from pydantic import BaseModel as _BaseModel
+
+class _FaceRegisterBody(_BaseModel):
+    name: str
+    price: float
+    photo_url: str = ""
+    tags: str = ""
+    ethnicity: str = ""
+    age: Optional[int] = None
+    gender: str = ""
+    style: str = ""
+    location: str = ""
+    face_id_hash: str = ""
+
 @router.post("")
 async def register_face(
-    name: str,
-    price: float,
-    photo_url: str = "",
-    tags: str = "",
-    ethnicity: str = "",
-    age: Optional[int] = None,
-    gender: str = "",
-    style: str = "",
-    location: str = "",
-    face_id_hash: str = "",
+    body: _FaceRegisterBody,
     current_user: dict = Depends(get_current_user),
 ):
     db = get_db()
@@ -124,7 +129,7 @@ async def register_face(
         db.execute(
             """INSERT INTO faces (id, user_id, name, photo_url, price, tags, ethnicity, age, gender, style, location, face_id_hash, verified)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)""",
-            (fid, current_user["id"], name, photo_url, price, tags, ethnicity, age, gender, style, location, face_id_hash),
+            (fid, current_user["id"], body.name, body.photo_url, body.price, body.tags, body.ethnicity, body.age, body.gender, body.style, body.location, body.face_id_hash),
         )
         db.commit()
 

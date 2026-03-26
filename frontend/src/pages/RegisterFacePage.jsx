@@ -401,16 +401,24 @@ export default function RegisterFacePage() {
                         if (!regName || !regPrice) { setError('Name and price are required'); return; }
                         setRegistering(true); setError('');
                         try {
-                          const params = new URLSearchParams({
-                            name: regName, price: regPrice, style: regStyle, ethnicity: regEthnicity,
-                            location: regLocation, face_id_hash: result.face_id,
-                            tags: [regEthnicity, regStyle].filter(Boolean).join(' · '),
-                            photo_url: result.preview_url || '',
-                          });
-                          await fetch(`${API_BASE}/faces?${params}`, {
+                          const res = await fetch(`${API_BASE}/faces`, {
                             method: 'POST',
-                            headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+                            headers: {
+                              'Content-Type': 'application/json',
+                              Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                            },
+                            body: JSON.stringify({
+                              name: regName,
+                              price: parseFloat(regPrice),
+                              style: regStyle,
+                              ethnicity: regEthnicity,
+                              location: regLocation,
+                              face_id_hash: result.face_id,
+                              tags: [regEthnicity, regStyle].filter(Boolean).join(' · '),
+                              photo_url: '',
+                            }),
                           });
+                          if (!res.ok) throw new Error((await res.json()).detail || 'Registration failed');
                           setRegistered(true);
                           setTimeout(() => navigate('/dashboard'), 2000);
                         } catch (e) { setError(e.message); }
