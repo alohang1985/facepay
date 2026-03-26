@@ -23,12 +23,15 @@ export default function MarketplacePage() {
   const [sort, setSort] = useState('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const PER_PAGE = 12;
 
   // Load faces from API
   const loadFaces = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = { limit: PER_PAGE, offset: (page - 1) * PER_PAGE };
       if (filters.gender !== 'All') params.gender = filters.gender;
       if (filters.ethnicity !== 'All') params.ethnicity = filters.ethnicity;
       if (filters.style !== 'All') params.style = filters.style;
@@ -38,13 +41,14 @@ export default function MarketplacePage() {
 
       const data = await facesApi.list(params);
       setAllFaces(data.faces || []);
+      setTotalCount(data.total || 0);
     } catch (e) {
       console.error('Failed to load faces:', e);
     }
     setLoading(false);
   }, [filters, search, priceRange]);
 
-  useEffect(() => { loadFaces(); }, [loadFaces]);
+  useEffect(() => { loadFaces(); }, [loadFaces, page]);
 
   // Client-side sort
   const sorted = [...allFaces].sort((a, b) => {
@@ -173,6 +177,22 @@ export default function MarketplacePage() {
                 <div className="text-[48px] mb-4">🔍</div>
                 <div className="text-white/30 text-[16px] font-medium mb-2">No faces found</div>
                 <div className="text-white/15 text-[13px]">Try adjusting your filters or search query</div>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalCount > PER_PAGE && (
+              <div className="flex items-center justify-center gap-2 mt-12">
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/40 flex items-center justify-center cursor-pointer hover:border-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[14px]">←</button>
+                {Array.from({ length: Math.ceil(totalCount / PER_PAGE) }, (_, i) => i + 1).map((p) => (
+                  <button key={p} onClick={() => setPage(p)}
+                    className={`w-10 h-10 rounded-xl text-[13px] font-semibold border cursor-pointer transition-all ${
+                      p === page ? 'bg-gold/10 border-gold/30 text-gold' : 'bg-white/[0.03] border-white/[0.08] text-white/40 hover:border-white/15'
+                    }`}>{p}</button>
+                ))}
+                <button onClick={() => setPage(p => Math.min(Math.ceil(totalCount / PER_PAGE), p + 1))} disabled={page >= Math.ceil(totalCount / PER_PAGE)}
+                  className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/40 flex items-center justify-center cursor-pointer hover:border-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[14px]">→</button>
               </div>
             )}
           </>

@@ -401,6 +401,22 @@ export default function RegisterFacePage() {
                         if (!regName || !regPrice) { setError('Name and price are required'); return; }
                         setRegistering(true); setError('');
                         try {
+                          // Step 1: Upload image if we have a file
+                          let photoUrl = '';
+                          if (file) {
+                            const uploadFd = new FormData();
+                            uploadFd.append('file', file);
+                            const uploadRes = await fetch(`${API_BASE}/faces/upload-image`, {
+                              method: 'POST',
+                              body: uploadFd,
+                            });
+                            if (uploadRes.ok) {
+                              const uploadData = await uploadRes.json();
+                              photoUrl = uploadData.photo_url;
+                            }
+                          }
+
+                          // Step 2: Register face with photo URL
                           const res = await fetch(`${API_BASE}/faces`, {
                             method: 'POST',
                             headers: {
@@ -415,7 +431,7 @@ export default function RegisterFacePage() {
                               location: regLocation,
                               face_id_hash: result.face_id,
                               tags: [regEthnicity, regStyle].filter(Boolean).join(' · '),
-                              photo_url: '',
+                              photo_url: photoUrl,
                             }),
                           });
                           if (!res.ok) throw new Error((await res.json()).detail || 'Registration failed');

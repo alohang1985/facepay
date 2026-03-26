@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/common/Toast';
 
 export default function LoginPage() {
+  const toast = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -20,13 +22,16 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         const data = await login({ email, password });
+        toast.success(`Welcome back, ${data.user.name}!`);
         navigate(data.user.role === 'admin' ? '/admin' : '/dashboard');
       } else {
         await register({ name, email, password });
+        toast.success('Account created successfully!');
         navigate('/dashboard');
       }
     } catch (err) {
       setError(err.message);
+      toast.error(err.message);
     }
     setLoading(false);
   };

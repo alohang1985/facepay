@@ -1,10 +1,15 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.database import init_db
 from app.routers import auth, faces, licenses, dashboard, admin
 
 settings = get_settings()
+
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(os.path.dirname(__file__), "..", "uploads"))
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(title="FacePay API", version="0.1.0")
 
@@ -15,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve uploaded images
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(faces.router, prefix="/api")

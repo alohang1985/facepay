@@ -2,12 +2,14 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { faces as facesApi, licenses } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/common/Toast';
 import { getFaceById } from '../data/faces';
 
 export default function FaceDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const [licenseType, setLicenseType] = useState('standard');
   const [showPurchase, setShowPurchase] = useState(false);
   const [purpose, setPurpose] = useState('');
@@ -43,9 +45,11 @@ export default function FaceDetailPage() {
         duration_months: duration,
       });
       setSuccess(true);
+      toast.success('License purchased successfully!');
       setTimeout(() => navigate('/my-licenses'), 2000);
     } catch (err) {
       setError(err.message);
+      toast.error(err.message);
     }
     setPurchasing(false);
   };

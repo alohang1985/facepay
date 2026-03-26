@@ -1,10 +1,40 @@
 import base64
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+import os
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Optional
+from pydantic import BaseModel as _BaseModel
 from app.core.security import get_current_user
 from app.core.database import get_db, dict_row, dict_rows, new_id
 
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads"))
+
 router = APIRouter(prefix="/faces", tags=["faces"])
+
+
+@router.post("/upload-image")
+async def upload_image(request: Request, file: UploadFile = File(...)):
+    """Upload a face image and return its URL."""
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Max 10MB")
+
+    ext = file.filename.rsplit(".", 1)[-1] if "." in (file.filename or "") else "jpg"
+    filename = f"{uuid.uuid4().hex}.{ext}"
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    # Build full URL
+    base_url = str(request.base_url).rstrip("/")
+    photo_url = f"{base_url}/uploads/{filename}"
+
+    return {"photo_url": photo_url, "filename": filename}
 
 
 @router.post("/analyze")
@@ -86,10 +116,8 @@ async def list_faces(
 async def get_face(face_id: str):
     db = get_db()
     try:
-        # Try by UUID first, then by integer ID for mock data compatibility
         row = db.execute("SELECT * FROM faces WHERE id = ?", (face_id,)).fetchone()
         if not row:
-            # Fallback: get by row number for legacy /face/1 etc
             try:
                 idx = int(face_id) - 1
                 rows = db.execute("SELECT * FROM faces WHERE verified = 1 ORDER BY created_at ASC").fetchall()
@@ -103,8 +131,6 @@ async def get_face(face_id: str):
     finally:
         db.close()
 
-
-from pydantic import BaseModel as _BaseModel
 
 class _FaceRegisterBody(_BaseModel):
     name: str

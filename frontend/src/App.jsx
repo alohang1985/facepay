@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import MyLicensesPage from './pages/MyLicensesPage';
 import RegisterFacePage from './pages/RegisterFacePage';
 import AdminPage from './pages/AdminPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/my-licenses" element={<ProtectedRoute><MyLicensesPage /></ProtectedRoute>} />
         <Route path="/register-face" element={<ProtectedRoute><RegisterFacePage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Footer />
     </BrowserRouter>

@@ -26,8 +26,8 @@ RUN mkdir -p models && \
 # Copy app
 COPY app/ app/
 
-# Create data directory for SQLite
-RUN mkdir -p /data
+# Create data directories
+RUN mkdir -p /data /data/uploads
 
 ENV DB_PATH=/data/facepay.db
 
