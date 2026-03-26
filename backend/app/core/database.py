@@ -249,6 +249,66 @@ def init_db():
             sort_order INTEGER DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS impressions (
+            id TEXT PRIMARY KEY,
+            license_id TEXT REFERENCES licenses(id),
+            face_id TEXT REFERENCES faces(id),
+            url TEXT DEFAULT '',
+            count INTEGER DEFAULT 0,
+            date TEXT DEFAULT (date('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS referrals (
+            id TEXT PRIMARY KEY,
+            referrer_id TEXT REFERENCES users(id),
+            referred_id TEXT REFERENCES users(id),
+            code TEXT NOT NULL,
+            reward_amount REAL DEFAULT 10,
+            status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'credited', 'expired')),
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS moodboards (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            is_public INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS moodboard_items (
+            id TEXT PRIMARY KEY,
+            moodboard_id TEXT REFERENCES moodboards(id) ON DELETE CASCADE,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            note TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(moodboard_id, face_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS price_history (
+            id TEXT PRIMARY KEY,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            price REAL NOT NULL,
+            demand_score REAL DEFAULT 0,
+            recorded_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS insurance (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id),
+            face_id TEXT REFERENCES faces(id),
+            plan TEXT DEFAULT 'basic' CHECK (plan IN ('basic', 'premium')),
+            monthly_cost REAL DEFAULT 2,
+            coverage_amount REAL DEFAULT 5000,
+            status TEXT DEFAULT 'active',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_impressions_license ON impressions(license_id);
+        CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(code);
+        CREATE INDEX IF NOT EXISTS idx_moodboards_user ON moodboards(user_id);
+        CREATE INDEX IF NOT EXISTS idx_price_history_face ON price_history(face_id);
         CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
         CREATE INDEX IF NOT EXISTS idx_auction_bids ON auction_bids(auction_id);
         CREATE INDEX IF NOT EXISTS idx_face_views ON face_views(face_id);
@@ -354,6 +414,9 @@ def _seed_data(cur):
             "INSERT INTO licenses (id, face_id, buyer_id, provider_id, license_type, usage_purpose, duration_months, price_paid, status, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             lic,
         )
+
+    # Referral codes for existing users
+    cur.execute("INSERT INTO referrals (id, referrer_id, code, status) VALUES (?, ?, 'SARAH10', 'pending')", (new_id(), buyer_id))
 
     # License tiers
     tiers = [

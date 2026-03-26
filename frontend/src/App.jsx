@@ -25,6 +25,9 @@ import ProviderPage from './pages/ProviderPage';
 import ProtectionPage from './pages/ProtectionPage';
 import AuctionsPage from './pages/AuctionsPage';
 import LicenseTiersPage from './pages/LicenseTiersPage';
+import FaceValuePage from './pages/FaceValuePage';
+import MoodboardsPage from './pages/MoodboardsPage';
+import ReferralPage from './pages/ReferralPage';
 
 export default function App() {
   return (
@@ -43,6 +46,7 @@ export default function App() {
         <Route path="/provider/:id" element={<ProviderPage />} />
         <Route path="/auctions" element={<AuctionsPage />} />
         <Route path="/license-types" element={<LicenseTiersPage />} />
+        <Route path="/face-value" element={<FaceValuePage />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
@@ -55,6 +59,8 @@ export default function App() {
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/api-keys" element={<ProtectedRoute><ApiKeysPage /></ProtectedRoute>} />
         <Route path="/protection" element={<ProtectedRoute><ProtectionPage /></ProtectedRoute>} />
+        <Route path="/moodboards" element={<ProtectedRoute><MoodboardsPage /></ProtectedRoute>} />
+        <Route path="/referral" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
 
         {/* Admin */}
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />

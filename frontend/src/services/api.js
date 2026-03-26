@@ -144,6 +144,32 @@ export const auctions = {
   tiers: () => request('/auctions/tiers/all'),
 };
 
+export const tracking = {
+  stats: (licenseId) => request(`/tracking/stats/${licenseId}`),
+  embedCode: (licenseId) => request(`/tracking/embed/${licenseId}`),
+};
+
+export const advanced = {
+  estimateValue: (params) => request(`/estimate-value?${new URLSearchParams(params)}`, { method: 'POST' }),
+  referralCode: () => request('/referral/my-code'),
+  applyReferral: (code) => request('/referral/apply', { method: 'POST', body: JSON.stringify({ code }) }),
+  priceEngine: (faceId) => request(`/price-engine/${faceId}`),
+  matchFaces: (params) => request(`/match?${new URLSearchParams(params)}`),
+  insuranceEnroll: (data) => request('/insurance/enroll', { method: 'POST', body: JSON.stringify(data) }),
+  myInsurance: () => request('/insurance/my'),
+  legalRequest: (faceId, issue) => request(`/legal/request?face_id=${faceId}&issue=${issue}`, { method: 'POST' }),
+  buyerPortfolio: (userId) => request(`/buyer-portfolio/${userId}`),
+};
+
+export const moodboards = {
+  list: () => request('/moodboards'),
+  create: (data) => request('/moodboards', { method: 'POST', body: JSON.stringify(data) }),
+  get: (id) => request(`/moodboards/${id}`),
+  delete: (id) => request(`/moodboards/${id}`, { method: 'DELETE' }),
+  addFace: (boardId, faceId) => request(`/moodboards/${boardId}/add/${faceId}`, { method: 'POST' }),
+  removeFace: (boardId, faceId) => request(`/moodboards/${boardId}/remove/${faceId}`, { method: 'DELETE' }),
+};
+
 export const admin = {
   stats: () => request('/admin/stats'),
   users: (limit = 50) => request(`/admin/users?limit=${limit}`),
