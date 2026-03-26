@@ -29,9 +29,8 @@ COPY app/ app/
 # Create data directory for SQLite
 RUN mkdir -p /data
 
-ENV PORT=8000
 ENV DB_PATH=/data/facepay.db
 
 EXPOSE 8000
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
