@@ -78,6 +78,12 @@ export default function LoginPage() {
             {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
           </button>
 
+          {isLogin && (
+            <div className="text-right mt-3">
+              <Link to="/forgot-password" className="text-[12px] text-white/25 no-underline hover:text-gold transition-colors">Forgot password?</Link>
+            </div>
+          )}
+
           {/* Quick login hint */}
           <div className="mt-5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-[11px] text-white/20 space-y-1">
             <div>Admin: <span className="text-white/40">admin@facepay.com / admin123</span></div>

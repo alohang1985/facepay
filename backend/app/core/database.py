@@ -135,6 +135,40 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            type TEXT DEFAULT 'info',
+            title TEXT NOT NULL,
+            body TEXT DEFAULT '',
+            link TEXT DEFAULT '',
+            read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS subscriptions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            plan TEXT NOT NULL CHECK (plan IN ('free', 'starter', 'pro', 'enterprise')),
+            price REAL DEFAULT 0,
+            status TEXT DEFAULT 'active',
+            started_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS promo_codes (
+            id TEXT PRIMARY KEY,
+            code TEXT UNIQUE NOT NULL,
+            discount_percent INTEGER DEFAULT 0,
+            discount_flat REAL DEFAULT 0,
+            max_uses INTEGER DEFAULT 100,
+            used_count INTEGER DEFAULT 0,
+            active INTEGER DEFAULT 1,
+            expires_at TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
         CREATE INDEX IF NOT EXISTS idx_reviews_face ON reviews(face_id);
         CREATE INDEX IF NOT EXISTS idx_messages_to ON messages(to_user_id);
         CREATE INDEX IF NOT EXISTS idx_apikeys_user ON api_keys(user_id);
@@ -222,4 +256,20 @@ def _seed_data(cur):
             lic,
         )
 
-    print("[DB] Seeded: admin@facepay.com/admin123, sarah@example.com/test123, 12 faces, 3 licenses")
+    # Promo codes
+    cur.execute("INSERT INTO promo_codes (id, code, discount_percent, max_uses) VALUES (?, ?, ?, ?)",
+                (new_id(), "WELCOME20", 20, 999))
+    cur.execute("INSERT INTO promo_codes (id, code, discount_percent, max_uses) VALUES (?, ?, ?, ?)",
+                (new_id(), "FIRST50", 50, 100))
+    cur.execute("INSERT INTO promo_codes (id, code, discount_flat, max_uses) VALUES (?, ?, ?, ?)",
+                (new_id(), "SAVE10", 10, 500))
+
+    # Sample notifications for Sarah
+    for title, body_text in [
+        ("Welcome to FacePay!", "Start exploring faces and licensing."),
+        ("License Expiring Soon", "Your license for Soojin Park expires in 5 days."),
+    ]:
+        cur.execute("INSERT INTO notifications (id, user_id, type, title, body) VALUES (?, ?, 'info', ?, ?)",
+                    (new_id(), buyer_id, title, body_text))
+
+    print("[DB] Seeded: admin@facepay.com/admin123, sarah@example.com/test123, 12 faces, 3 licenses, promo codes")

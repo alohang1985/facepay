@@ -17,16 +17,27 @@ import WishlistPage from './pages/WishlistPage';
 import EarningsPage from './pages/EarningsPage';
 import MessagesPage from './pages/MessagesPage';
 import ApiKeysPage from './pages/ApiKeysPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import PricingPage from './pages/PricingPage';
+import RankingsPage from './pages/RankingsPage';
+import ComparePage from './pages/ComparePage';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Navbar />
       <Routes>
+        {/* Public */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/face/:id" element={<FaceDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/rankings" element={<RankingsPage />} />
+        <Route path="/compare" element={<ComparePage />} />
+
+        {/* Protected */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/my-licenses" element={<ProtectedRoute><MyLicensesPage /></ProtectedRoute>} />
         <Route path="/register-face" element={<ProtectedRoute><RegisterFacePage /></ProtectedRoute>} />
@@ -36,7 +47,11 @@ export default function App() {
         <Route path="/earnings" element={<ProtectedRoute><EarningsPage /></ProtectedRoute>} />
         <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/api-keys" element={<ProtectedRoute><ApiKeysPage /></ProtectedRoute>} />
+
+        {/* Admin */}
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
+
+        {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Footer />

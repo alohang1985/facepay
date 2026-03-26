@@ -1,9 +1,13 @@
+import secrets
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from app.schemas.auth import RegisterRequest, LoginRequest, AuthResponse
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
 from app.core.database import get_db, dict_row, new_id
+
+# In-memory reset tokens (production would use Redis/DB)
+_reset_tokens = {}
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -111,5 +115,42 @@ async def change_password(body: _PasswordChange, current_user: dict = Depends(ge
         db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, current_user["id"]))
         db.commit()
         return {"message": "Password changed successfully"}
+    finally:
+        db.close()
+
+
+class _ForgotPassword(BaseModel):
+    email: str
+
+@router.post("/forgot-password")
+async def forgot_password(body: _ForgotPassword):
+    db = get_db()
+    try:
+        user = db.execute("SELECT id, email FROM users WHERE email = ?", (body.email,)).fetchone()
+        if not user:
+            return {"message": "If the email exists, a reset link has been sent."}
+        token = secrets.token_urlsafe(32)
+        _reset_tokens[token] = user["id"]
+        # In production: send email with reset link
+        return {"message": "If the email exists, a reset link has been sent.", "reset_token": token}
+    finally:
+        db.close()
+
+
+class _ResetPassword(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/reset-password")
+async def reset_password(body: _ResetPassword):
+    user_id = _reset_tokens.pop(body.token, None)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    db = get_db()
+    try:
+        new_hash = hash_password(body.new_password)
+        db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
+        db.commit()
+        return {"message": "Password reset successfully"}
     finally:
         db.close()

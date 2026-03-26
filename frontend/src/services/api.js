@@ -97,6 +97,25 @@ export const similar = {
   find: (faceId, limit = 6) => request(`/faces/similar/${faceId}?limit=${limit}`),
 };
 
+export const notifications = {
+  list: () => request('/notifications'),
+  readAll: () => request('/notifications/read-all', { method: 'PATCH' }),
+  readOne: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+};
+
+export const subscriptions = {
+  plans: () => request('/subscriptions/plans'),
+  my: () => request('/subscriptions/my'),
+  subscribe: (plan) => request('/subscriptions/subscribe', { method: 'POST', body: JSON.stringify({ plan }) }),
+  validatePromo: (code, amount) => request('/subscriptions/validate-promo', { method: 'POST', body: JSON.stringify({ code, amount }) }),
+  rankings: () => request('/subscriptions/rankings'),
+};
+
+export const authExtra = {
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token, new_password) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, new_password }) }),
+};
+
 export const admin = {
   stats: () => request('/admin/stats'),
   users: (limit = 50) => request(`/admin/users?limit=${limit}`),

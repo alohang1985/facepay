@@ -2,11 +2,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LangContext';
+import { useTheme } from '../../context/ThemeContext';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const { lang, toggleLang, t } = useLang();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -89,6 +92,15 @@ export default function Navbar() {
                 <Link to="/marketplace" className="px-5 py-2 rounded-full bg-gold text-dark font-semibold text-[12px] tracking-wide no-underline hover:bg-gold-light transition-all duration-200">{t('getStarted')}</Link>
               </>
             )}
+            {/* Notification bell */}
+            {user && <NotificationBell />}
+
+            {/* Theme toggle */}
+            <button onClick={toggleTheme}
+              className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[13px] cursor-pointer hover:border-gold/20 transition-all">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+
             {/* Language toggle */}
             <button onClick={toggleLang}
               className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[11px] font-bold text-white/40 cursor-pointer hover:text-gold hover:border-gold/20 transition-all">
