@@ -91,6 +91,17 @@ def init_db():
             UNIQUE(user_id, face_id)
         );
 
+        CREATE TABLE IF NOT EXISTS reviews (
+            id TEXT PRIMARY KEY,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            comment TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(face_id, user_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_reviews_face ON reviews(face_id);
         CREATE INDEX IF NOT EXISTS idx_faces_verified ON faces(verified);
         CREATE INDEX IF NOT EXISTS idx_faces_user ON faces(user_id);
         CREATE INDEX IF NOT EXISTS idx_licenses_buyer ON licenses(buyer_id);

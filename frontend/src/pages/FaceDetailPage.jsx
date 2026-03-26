@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { faces as facesApi, licenses, wishlist as wishApi } from '../services/api';
+import { faces as facesApi, licenses, wishlist as wishApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/common/Toast';
 import { getFaceById } from '../data/faces';
@@ -18,6 +18,12 @@ export default function FaceDetailPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [inWishlist, setInWishlist] = useState(false);
+  const [rvws, setRvws] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [myRating, setMyRating] = useState(0);
+  const [myComment, setMyComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Try API first, fallback to local data
   const [face, setFace] = useState(null);
@@ -31,7 +37,29 @@ export default function FaceDetailPage() {
     if (user) {
       wishApi.check(id).then((d) => setInWishlist(d.in_wishlist)).catch(() => {});
     }
+    loadReviews();
   }, [id, user]);
+
+  const loadReviews = () => {
+    reviewsApi.forFace(id).then((d) => {
+      setRvws(d.reviews || []);
+      setAvgRating(d.average_rating || 0);
+      setTotalReviews(d.total_reviews || 0);
+    }).catch(() => {});
+  };
+
+  const submitReview = async () => {
+    if (!user) { navigate('/login'); return; }
+    if (!myRating) { toast.error('Please select a rating'); return; }
+    setSubmittingReview(true);
+    try {
+      await reviewsApi.create({ face_id: face.id, rating: myRating, comment: myComment });
+      toast.success('Review submitted!');
+      setMyRating(0); setMyComment('');
+      loadReviews();
+    } catch (e) { toast.error(e.message); }
+    setSubmittingReview(false);
+  };
 
   const toggleWishlist = async () => {
     if (!user) { navigate('/login'); return; }
@@ -239,6 +267,58 @@ export default function FaceDetailPage() {
                     </div>
                   </>
                 )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-24">
+          <div className="border-t border-white/[0.06] pt-12">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-[24px] font-bold tracking-[-0.5px]">Reviews</h2>
+              {totalReviews > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-gold text-[18px]">{'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5-Math.round(avgRating))}</span>
+                  <span className="text-white/40 text-[14px]">{avgRating} ({totalReviews})</span>
+                </div>
+              )}
+            </div>
+
+            {/* Write Review */}
+            <div className="p-6 rounded-2xl bg-white/[0.025] border border-white/[0.06] mb-6">
+              <div className="text-[11px] uppercase tracking-[2px] text-white/25 mb-4 font-semibold">Write a Review</div>
+              <div className="flex gap-1 mb-4">
+                {[1,2,3,4,5].map((s) => (
+                  <button key={s} onClick={() => setMyRating(s)}
+                    className={`text-[24px] bg-transparent border-none cursor-pointer transition-colors ${s <= myRating ? 'text-gold' : 'text-white/15 hover:text-gold/40'}`}>★</button>
+                ))}
+              </div>
+              <textarea value={myComment} onChange={(e) => setMyComment(e.target.value)} rows={3} placeholder="Share your experience..."
+                className="w-full py-3 px-4 bg-white/[0.04] border border-white/[0.08] rounded-xl text-text-primary text-[14px] outline-none focus:border-gold/30 transition-colors placeholder:text-white/15 resize-none mb-4" />
+              <button onClick={submitReview} disabled={submittingReview || !myRating}
+                className="px-6 py-3 rounded-full bg-gold text-dark font-bold text-[13px] hover:bg-gold-light transition-all border-none cursor-pointer disabled:opacity-30">
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </div>
+
+            {/* Review List */}
+            {rvws.length === 0 ? (
+              <div className="text-center py-12 text-white/15 text-[14px]">No reviews yet. Be the first!</div>
+            ) : (
+              <div className="space-y-3">
+                {rvws.map((r) => (
+                  <div key={r.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className="font-semibold text-[14px]">{r.user_name || 'Anonymous'}</span>
+                        <span className="text-gold text-[13px] ml-2">{'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)}</span>
+                      </div>
+                      <span className="text-white/15 text-[11px]">{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {r.comment && <p className="text-white/40 text-[13px] leading-relaxed">{r.comment}</p>}
+                  </div>
+                ))}
               </div>
             )}
           </div>

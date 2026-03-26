@@ -67,16 +67,19 @@ export default function MyLicensesPage() {
                       <div>{lic.license_type} license · {lic.duration_months} months · <span className="text-gold font-semibold">${lic.price_paid}</span></div>
                       <div>Expires: {new Date(lic.expires_at).toLocaleDateString()}</div>
                     </div>
-                    {(lic.status === 'expired' || lic.status === 'active') && (
-                      <div className="flex gap-2 mt-3">
-                        {[3, 6, 12].map((m) => (
-                          <button key={m} onClick={() => handleRenew(lic.id, m)}
-                            className="px-3.5 py-1.5 rounded-lg bg-transparent border border-gold/20 text-gold text-[11px] font-semibold cursor-pointer hover:bg-gold/10 transition-all">
-                            {lic.status === 'expired' ? 'Renew' : 'Extend'} {m}mo
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      {(lic.status === 'expired' || lic.status === 'active') && [3, 6, 12].map((m) => (
+                        <button key={m} onClick={() => handleRenew(lic.id, m)}
+                          className="px-3.5 py-1.5 rounded-lg bg-transparent border border-gold/20 text-gold text-[11px] font-semibold cursor-pointer hover:bg-gold/10 transition-all">
+                          {lic.status === 'expired' ? 'Renew' : 'Extend'} {m}mo
+                        </button>
+                      ))}
+                      <a href={`${(import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/^(?!http)/, 'https://')}/licenses/${lic.id}/pdf`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="px-3.5 py-1.5 rounded-lg bg-transparent border border-blue-400/20 text-blue-400 text-[11px] font-semibold cursor-pointer hover:bg-blue-400/10 transition-all no-underline inline-flex items-center gap-1">
+                        📄 PDF Certificate
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

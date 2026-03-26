@@ -54,6 +54,13 @@ export const licenses = {
   my: () => request('/licenses/my'),
   provided: () => request('/licenses/provided'),
   renew: (id, months = 3) => request(`/licenses/${id}/renew?months=${months}`, { method: 'POST' }),
+  pdfUrl: (id) => `${API_BASE}/licenses/${id}/pdf?token=${localStorage.getItem('access_token')}`,
+};
+
+export const reviews = {
+  forFace: (faceId) => request(`/reviews/face/${faceId}`),
+  create: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => request(`/reviews/${id}`, { method: 'DELETE' }),
 };
 
 export const wishlist = {

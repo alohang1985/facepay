@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.core.database import init_db
-from app.routers import auth, faces, licenses, dashboard, admin, wishlist
+from app.routers import auth, faces, licenses, dashboard, admin, wishlist, reviews
 
 settings = get_settings()
 
@@ -30,6 +30,7 @@ app.include_router(licenses.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(wishlist.router, prefix="/api")
+app.include_router(reviews.router, prefix="/api")
 
 
 @app.on_event("startup")

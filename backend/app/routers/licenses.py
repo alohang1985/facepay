@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import Response
 from app.schemas.license import LicensePurchaseRequest, LicenseResponse
 from app.core.security import get_current_user
 from app.core.database import get_db, dict_row, dict_rows, new_id
@@ -76,6 +77,29 @@ async def renew_license(lic_id: str, months: int = 3, current_user: dict = Depen
 
         updated = db.execute("SELECT * FROM licenses WHERE id = ?", (lic_id,)).fetchone()
         return {"license": dict_row(updated), "renewal_price": renewal_price}
+    finally:
+        db.close()
+
+
+@router.get("/{lic_id}/pdf")
+async def download_license_pdf(lic_id: str, token: str = None, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        lic = db.execute("SELECT * FROM licenses WHERE id = ? AND buyer_id = ?", (lic_id, current_user["id"])).fetchone()
+        if not lic:
+            raise HTTPException(status_code=404, detail="License not found")
+
+        face = db.execute("SELECT * FROM faces WHERE id = ?", (lic["face_id"],)).fetchone()
+        buyer = db.execute("SELECT name, email FROM users WHERE id = ?", (current_user["id"],)).fetchone()
+
+        from app.services.pdf_generator import generate_license_pdf
+        pdf_bytes = generate_license_pdf(dict_row(lic), dict_row(face) if face else {}, dict_row(buyer) if buyer else {})
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=FacePay-License-{lic_id[:8]}.pdf"},
+        )
     finally:
         db.close()
 

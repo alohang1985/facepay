@@ -9,3 +9,4 @@ mediapipe==0.10.33
 opencv-contrib-python-headless==4.10.0.84
 numpy>=1.26.0
 Pillow>=10.0.0
+reportlab>=4.0.0
