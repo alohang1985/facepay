@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const _raw = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE = _raw.startsWith('http') ? _raw : `https://${_raw}`;
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('access_token');
