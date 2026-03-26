@@ -26,6 +26,8 @@ export default function Navbar() {
     { to: '/my-faces', label: t('myFaces') },
     { to: '/wishlist', label: t('wishlist') },
     { to: '/earnings', label: t('earnings') },
+    { to: '/messages', label: 'Messages' },
+    { to: '/api-keys', label: 'API Keys' },
     { to: '/profile', label: t('profile') },
   ] : [];
 

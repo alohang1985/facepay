@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { faces as facesApi, licenses, wishlist as wishApi, reviews as reviewsApi } from '../services/api';
+import { faces as facesApi, licenses, wishlist as wishApi, reviews as reviewsApi, similar as similarApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/common/Toast';
 import { getFaceById } from '../data/faces';
@@ -24,6 +24,7 @@ export default function FaceDetailPage() {
   const [myRating, setMyRating] = useState(0);
   const [myComment, setMyComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [similarFaces, setSimilarFaces] = useState([]);
 
   // Try API first, fallback to local data
   const [face, setFace] = useState(null);
@@ -38,6 +39,7 @@ export default function FaceDetailPage() {
       wishApi.check(id).then((d) => setInWishlist(d.in_wishlist)).catch(() => {});
     }
     loadReviews();
+    similarApi.find(id).then((d) => setSimilarFaces(d.similar || [])).catch(() => {});
   }, [id, user]);
 
   const loadReviews = () => {
@@ -271,6 +273,28 @@ export default function FaceDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Similar Faces */}
+        {similarFaces.length > 0 && (
+          <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-12">
+            <h2 className="text-[22px] font-bold tracking-[-0.5px] mb-6">Similar Faces</h2>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              {similarFaces.map((sf) => (
+                <Link key={sf.id} to={`/face/${sf.id}`} className="group block no-underline">
+                  <div className="relative aspect-square rounded-xl overflow-hidden">
+                    <img src={sf.photo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face'} alt={sf.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="text-white text-[12px] font-semibold truncate">{sf.name}</div>
+                      <div className="text-gold text-[11px] font-bold">${sf.price}</div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Reviews Section */}
         <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-24">

@@ -76,6 +76,27 @@ export const dashboard = {
   earnings: () => request('/dashboard/earnings'),
 };
 
+export const apiKeys = {
+  list: () => request('/api-keys'),
+  create: (data) => request('/api-keys', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => request(`/api-keys/${id}`, { method: 'DELETE' }),
+  toggle: (id) => request(`/api-keys/${id}/toggle`, { method: 'PATCH' }),
+};
+
+export const messages = {
+  inbox: () => request('/messages/inbox'),
+  sent: () => request('/messages/sent'),
+  send: (data) => request('/messages', { method: 'POST', body: JSON.stringify(data) }),
+  markRead: (id) => request(`/messages/${id}/read`, { method: 'PATCH' }),
+  delete: (id) => request(`/messages/${id}`, { method: 'DELETE' }),
+  reportMisuse: (data) => request('/messages/report-misuse', { method: 'POST', body: JSON.stringify(data) }),
+  myReports: () => request('/messages/reports'),
+};
+
+export const similar = {
+  find: (faceId, limit = 6) => request(`/faces/similar/${faceId}?limit=${limit}`),
+};
+
 export const admin = {
   stats: () => request('/admin/stats'),
   users: (limit = 50) => request(`/admin/users?limit=${limit}`),

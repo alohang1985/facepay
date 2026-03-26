@@ -15,6 +15,8 @@ import ProfilePage from './pages/ProfilePage';
 import MyFacesPage from './pages/MyFacesPage';
 import WishlistPage from './pages/WishlistPage';
 import EarningsPage from './pages/EarningsPage';
+import MessagesPage from './pages/MessagesPage';
+import ApiKeysPage from './pages/ApiKeysPage';
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/my-faces" element={<ProtectedRoute><MyFacesPage /></ProtectedRoute>} />
         <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="/earnings" element={<ProtectedRoute><EarningsPage /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+        <Route path="/api-keys" element={<ProtectedRoute><ApiKeysPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

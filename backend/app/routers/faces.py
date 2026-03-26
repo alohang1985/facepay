@@ -65,6 +65,62 @@ async def analyze_face_photo(file: UploadFile = File(...)):
     }
 
 
+@router.get("/similar/{face_id}")
+async def find_similar(face_id: str, limit: int = 6):
+    """Find faces similar to the given face using geometric ratio comparison."""
+    import json, math
+    db = get_db()
+    try:
+        target = db.execute("SELECT * FROM faces WHERE id = ?", (face_id,)).fetchone()
+        if not target:
+            # Try numeric fallback
+            try:
+                idx = int(face_id) - 1
+                rows = db.execute("SELECT * FROM faces WHERE verified = 1 ORDER BY created_at ASC").fetchall()
+                if 0 <= idx < len(rows):
+                    target = rows[idx]
+            except (ValueError, IndexError):
+                pass
+        if not target:
+            raise HTTPException(status_code=404, detail="Face not found")
+
+        target = dict_row(target)
+        all_faces = db.execute("SELECT * FROM faces WHERE verified = 1 AND id != ?", (target["id"],)).fetchall()
+        all_faces = dict_rows(all_faces)
+
+        # Compare by attributes (ethnicity, gender, style, age range)
+        scored = []
+        for f in all_faces:
+            score = 0
+            if f.get("ethnicity") == target.get("ethnicity"):
+                score += 3
+            if f.get("gender") == target.get("gender"):
+                score += 2
+            if f.get("style") == target.get("style"):
+                score += 2
+            # Age proximity (within 5 years = bonus)
+            if f.get("age") and target.get("age"):
+                diff = abs(f["age"] - target["age"])
+                if diff <= 5:
+                    score += 2
+                elif diff <= 10:
+                    score += 1
+            # Price similarity
+            if f.get("price") and target.get("price"):
+                pdiff = abs(f["price"] - target["price"])
+                if pdiff <= 5:
+                    score += 1
+
+            scored.append((score, f))
+
+        scored.sort(key=lambda x: -x[0])
+        similar = [f for _, f in scored[:limit]]
+
+        return {"similar": similar, "count": len(similar)}
+    finally:
+        db.close()
+
+
 @router.get("")
 async def list_faces(
     gender: Optional[str] = None,

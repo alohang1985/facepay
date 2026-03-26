@@ -101,7 +101,43 @@ def init_db():
             UNIQUE(face_id, user_id)
         );
 
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            key_hash TEXT NOT NULL,
+            name TEXT DEFAULT 'Default',
+            permissions TEXT DEFAULT 'read',
+            calls_today INTEGER DEFAULT 0,
+            calls_total INTEGER DEFAULT 0,
+            rate_limit INTEGER DEFAULT 100,
+            active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            last_used_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
+            from_user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            to_user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            face_id TEXT REFERENCES faces(id) ON DELETE SET NULL,
+            subject TEXT DEFAULT '',
+            body TEXT NOT NULL,
+            read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS usage_reports (
+            id TEXT PRIMARY KEY,
+            license_id TEXT REFERENCES licenses(id) ON DELETE CASCADE,
+            reported_url TEXT NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'investigating', 'resolved', 'dismissed')),
+            notes TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
         CREATE INDEX IF NOT EXISTS idx_reviews_face ON reviews(face_id);
+        CREATE INDEX IF NOT EXISTS idx_messages_to ON messages(to_user_id);
+        CREATE INDEX IF NOT EXISTS idx_apikeys_user ON api_keys(user_id);
         CREATE INDEX IF NOT EXISTS idx_faces_verified ON faces(verified);
         CREATE INDEX IF NOT EXISTS idx_faces_user ON faces(user_id);
         CREATE INDEX IF NOT EXISTS idx_licenses_buyer ON licenses(buyer_id);
