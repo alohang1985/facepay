@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
 import { licenses as licApi } from '../services/api';
+import { useToast } from '../components/common/Toast';
 
 export default function MyLicensesPage() {
   const [tab, setTab] = useState('all');
   const [myLicenses, setMyLicenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
-  useEffect(() => {
-    licApi.my().then(setMyLicenses).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const load = () => { licApi.my().then(setMyLicenses).catch(() => {}).finally(() => setLoading(false)); };
+  useEffect(load, []);
+
+  const handleRenew = async (id, months) => {
+    try {
+      const result = await licApi.renew(id, months);
+      toast.success(`License renewed! +${months} months ($${result.renewal_price.toFixed(2)})`);
+      load();
+    } catch (e) { toast.error(e.message); }
+  };
 
   const filtered = tab === 'all' ? myLicenses : myLicenses.filter((l) => l.status === tab);
 
@@ -58,6 +67,16 @@ export default function MyLicensesPage() {
                       <div>{lic.license_type} license · {lic.duration_months} months · <span className="text-gold font-semibold">${lic.price_paid}</span></div>
                       <div>Expires: {new Date(lic.expires_at).toLocaleDateString()}</div>
                     </div>
+                    {(lic.status === 'expired' || lic.status === 'active') && (
+                      <div className="flex gap-2 mt-3">
+                        {[3, 6, 12].map((m) => (
+                          <button key={m} onClick={() => handleRenew(lic.id, m)}
+                            className="px-3.5 py-1.5 rounded-lg bg-transparent border border-gold/20 text-gold text-[11px] font-semibold cursor-pointer hover:bg-gold/10 transition-all">
+                            {lic.status === 'expired' ? 'Renew' : 'Extend'} {m}mo
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

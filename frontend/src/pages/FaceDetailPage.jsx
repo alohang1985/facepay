@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { faces as facesApi, licenses } from '../services/api';
+import { faces as facesApi, licenses, wishlist as wishApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/common/Toast';
 import { getFaceById } from '../data/faces';
@@ -17,6 +17,7 @@ export default function FaceDetailPage() {
   const [purchasing, setPurchasing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [inWishlist, setInWishlist] = useState(false);
 
   // Try API first, fallback to local data
   const [face, setFace] = useState(null);
@@ -27,7 +28,25 @@ export default function FaceDetailPage() {
       .then(setFace)
       .catch(() => setFace(getFaceById(id)))
       .finally(() => setLoading(false));
-  }, [id]);
+    if (user) {
+      wishApi.check(id).then((d) => setInWishlist(d.in_wishlist)).catch(() => {});
+    }
+  }, [id, user]);
+
+  const toggleWishlist = async () => {
+    if (!user) { navigate('/login'); return; }
+    try {
+      if (inWishlist) {
+        await wishApi.remove(face.id);
+        setInWishlist(false);
+        toast.info('Removed from wishlist');
+      } else {
+        await wishApi.add(face.id);
+        setInWishlist(true);
+        toast.success('Added to wishlist!');
+      }
+    } catch (e) { toast.error(e.message); }
+  };
 
   if (loading) return <div className="min-h-screen pt-[64px] flex items-center justify-center"><div className="w-10 h-10 rounded-full border-2 border-gold/20 border-t-gold animate-spin" /></div>;
   if (!face) return <div className="min-h-screen pt-[64px] flex items-center justify-center text-white/30">Face not found</div>;
@@ -93,7 +112,15 @@ export default function FaceDetailPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-[36px] font-extrabold tracking-[-1.5px] mb-2">{face.name}</h1>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-[36px] font-extrabold tracking-[-1.5px]">{face.name}</h1>
+              <button onClick={toggleWishlist}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-[18px] cursor-pointer border transition-all duration-200 ${
+                  inWishlist ? 'bg-danger/10 border-danger/20 text-danger' : 'bg-white/[0.04] border-white/[0.08] text-white/20 hover:text-danger hover:border-danger/20'
+                }`}>
+                {inWishlist ? '♥' : '♡'}
+              </button>
+            </div>
             <p className="text-white/30 text-[14px] mb-7">Age: {face.age} · Ethnicity: {face.ethnicity} · {face.location}</p>
 
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/15 text-emerald-400 text-[12px] font-semibold mb-7">

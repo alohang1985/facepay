@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import Optional
 from app.schemas.auth import RegisterRequest, LoginRequest, AuthResponse
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
 from app.core.database import get_db, dict_row, new_id
@@ -57,11 +59,57 @@ async def me(current_user: dict = Depends(get_current_user)):
     db = get_db()
     try:
         row = db.execute(
-            "SELECT id, name, email, role, balance, created_at FROM users WHERE id = ?",
+            "SELECT id, name, email, role, balance, avatar_url, created_at FROM users WHERE id = ?",
             (current_user["id"],),
         ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="User not found")
         return dict_row(row)
+    finally:
+        db.close()
+
+
+class _ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+@router.patch("/profile")
+async def update_profile(body: _ProfileUpdate, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        updates, params = [], []
+        if body.name is not None:
+            updates.append("name = ?"); params.append(body.name)
+        if body.avatar_url is not None:
+            updates.append("avatar_url = ?"); params.append(body.avatar_url)
+        if not updates:
+            raise HTTPException(status_code=400, detail="Nothing to update")
+
+        params.append(current_user["id"])
+        db.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+        db.commit()
+
+        row = db.execute("SELECT id, name, email, role, balance, avatar_url, created_at FROM users WHERE id = ?", (current_user["id"],)).fetchone()
+        return dict_row(row)
+    finally:
+        db.close()
+
+
+class _PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+async def change_password(body: _PasswordChange, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        row = db.execute("SELECT password_hash FROM users WHERE id = ?", (current_user["id"],)).fetchone()
+        if not row or not verify_password(body.current_password, row["password_hash"]):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+        new_hash = hash_password(body.new_password)
+        db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, current_user["id"]))
+        db.commit()
+        return {"message": "Password changed successfully"}
     finally:
         db.close()

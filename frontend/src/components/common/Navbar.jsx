@@ -11,13 +11,21 @@ export default function Navbar() {
   const links = [
     { to: '/marketplace', label: 'Explore' },
     { to: '/register-face', label: 'Register' },
-    { to: '/my-licenses', label: 'Licenses' },
     { to: '/dashboard', label: 'Dashboard' },
   ];
 
   if (user?.role === 'admin') {
     links.push({ to: '/admin', label: 'Admin' });
   }
+
+  // User dropdown items (shown in mobile menu)
+  const userLinks = user ? [
+    { to: '/my-licenses', label: 'My Licenses' },
+    { to: '/my-faces', label: 'My Faces' },
+    { to: '/wishlist', label: 'Wishlist' },
+    { to: '/earnings', label: 'Earnings' },
+    { to: '/profile', label: 'Profile' },
+  ] : [];
 
   const handleLogout = () => {
     logout();
@@ -50,18 +58,27 @@ export default function Navbar() {
           </div>
 
           {/* Desktop auth */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden md:flex items-center gap-4">
             {user ? (
-              <>
-                <span className="text-[12px] text-white/40">
-                  {user.name}
-                  {user.role === 'admin' && <span className="ml-1.5 px-1.5 py-0.5 rounded bg-gold/20 text-gold text-[10px] font-bold">ADMIN</span>}
-                </span>
-                <button onClick={handleLogout}
-                  className="px-4 py-2 rounded-full border border-white/10 text-white/40 text-[12px] font-medium bg-transparent cursor-pointer hover:border-danger/30 hover:text-danger transition-all duration-200">
-                  Logout
+              <div className="relative group">
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-white/[0.04] transition-all cursor-pointer bg-transparent border-none">
+                  <div className="w-7 h-7 rounded-full bg-gold/15 flex items-center justify-center text-gold text-[11px] font-bold">
+                    {user.name?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <span className="text-[12px] text-white/50">{user.name}</span>
+                  {user.role === 'admin' && <span className="px-1.5 py-0.5 rounded bg-gold/20 text-gold text-[9px] font-bold">ADMIN</span>}
+                  <svg className="w-3 h-3 text-white/20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                 </button>
-              </>
+                {/* Dropdown */}
+                <div className="absolute right-0 top-full mt-1.5 w-48 py-2 rounded-xl bg-dark3 border border-white/[0.08] shadow-2xl shadow-black/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  {userLinks.map((l) => (
+                    <Link key={l.to} to={l.to} className="block px-4 py-2.5 text-[12px] text-white/40 no-underline hover:text-gold hover:bg-white/[0.03] transition-colors">{l.label}</Link>
+                  ))}
+                  <div className="border-t border-white/[0.06] mt-1 pt-1">
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-[12px] text-danger/60 bg-transparent border-none cursor-pointer hover:bg-danger/5 hover:text-danger transition-colors">Logout</button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 <Link to="/login" className="text-[13px] text-white/50 no-underline hover:text-white transition-colors duration-200">Sign In</Link>
@@ -94,11 +111,15 @@ export default function Navbar() {
             ))}
             <div className="border-t border-white/[0.06] pt-6 mt-2">
               {user ? (
-                <div className="space-y-4">
-                  <div className="text-white/40 text-[14px]">
+                <div className="space-y-3">
+                  <div className="text-white/40 text-[14px] mb-2">
                     Signed in as <span className="text-white/70 font-medium">{user.name}</span>
                     {user.role === 'admin' && <span className="ml-2 px-1.5 py-0.5 rounded bg-gold/20 text-gold text-[10px] font-bold">ADMIN</span>}
                   </div>
+                  {userLinks.map((l) => (
+                    <Link key={l.to} to={l.to} onClick={() => setMobileOpen(false)}
+                      className={`block text-[15px] no-underline transition-colors ${pathname === l.to ? 'text-gold' : 'text-white/35'}`}>{l.label}</Link>
+                  ))}
                   <button onClick={handleLogout}
                     className="w-full py-3.5 rounded-full border border-danger/20 text-danger text-[14px] font-medium bg-transparent cursor-pointer">
                     Logout

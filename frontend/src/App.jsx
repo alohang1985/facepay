@@ -11,6 +11,10 @@ import MyLicensesPage from './pages/MyLicensesPage';
 import RegisterFacePage from './pages/RegisterFacePage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProfilePage from './pages/ProfilePage';
+import MyFacesPage from './pages/MyFacesPage';
+import WishlistPage from './pages/WishlistPage';
+import EarningsPage from './pages/EarningsPage';
 
 export default function App() {
   return (
@@ -24,6 +28,10 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/my-licenses" element={<ProtectedRoute><MyLicensesPage /></ProtectedRoute>} />
         <Route path="/register-face" element={<ProtectedRoute><RegisterFacePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/my-faces" element={<ProtectedRoute><MyFacesPage /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
+        <Route path="/earnings" element={<ProtectedRoute><EarningsPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

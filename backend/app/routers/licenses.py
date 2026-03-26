@@ -48,6 +48,38 @@ async def purchase_license(req: LicensePurchaseRequest, current_user: dict = Dep
         db.close()
 
 
+@router.post("/{lic_id}/renew")
+async def renew_license(lic_id: str, months: int = 3, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        row = db.execute("SELECT * FROM licenses WHERE id = ? AND buyer_id = ?", (lic_id, current_user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="License not found")
+
+        lic = dict_row(row)
+        # Calculate new expiry from now
+        from datetime import datetime, timedelta
+        new_expires = (datetime.utcnow() + timedelta(days=months * 30)).isoformat()
+        duration_mult = {3: 1, 6: 1.5, 12: 2.0}.get(months, 1)
+
+        # Get face price
+        face = db.execute("SELECT price FROM faces WHERE id = ?", (lic["face_id"],)).fetchone()
+        base_price = face["price"] if face else lic["price_paid"]
+        multiplier = 2.5 if lic["license_type"] == "extended" else 1.0
+        renewal_price = base_price * multiplier * duration_mult
+
+        db.execute(
+            "UPDATE licenses SET status = 'active', expires_at = ?, duration_months = ?, price_paid = price_paid + ? WHERE id = ?",
+            (new_expires, months, renewal_price, lic_id),
+        )
+        db.commit()
+
+        updated = db.execute("SELECT * FROM licenses WHERE id = ?", (lic_id,)).fetchone()
+        return {"license": dict_row(updated), "renewal_price": renewal_price}
+    finally:
+        db.close()
+
+
 @router.get("/my")
 async def my_licenses(current_user: dict = Depends(get_current_user)):
     db = get_db()

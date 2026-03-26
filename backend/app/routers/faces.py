@@ -163,3 +163,66 @@ async def register_face(
         return dict_row(row)
     finally:
         db.close()
+
+
+@router.get("/my/list")
+async def my_faces(current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        rows = db.execute("SELECT * FROM faces WHERE user_id = ? ORDER BY created_at DESC", (current_user["id"],)).fetchall()
+        return {"faces": dict_rows(rows)}
+    finally:
+        db.close()
+
+
+class _FaceUpdateBody(_BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    tags: Optional[str] = None
+    ethnicity: Optional[str] = None
+    style: Optional[str] = None
+    location: Optional[str] = None
+    photo_url: Optional[str] = None
+
+@router.patch("/{face_id}")
+async def update_face(face_id: str, body: _FaceUpdateBody, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        face = db.execute("SELECT user_id FROM faces WHERE id = ?", (face_id,)).fetchone()
+        if not face:
+            raise HTTPException(status_code=404, detail="Face not found")
+        if face["user_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        updates, params = [], []
+        for field in ["name", "price", "tags", "ethnicity", "style", "location", "photo_url"]:
+            val = getattr(body, field, None)
+            if val is not None:
+                updates.append(f"{field} = ?"); params.append(val)
+        if not updates:
+            raise HTTPException(status_code=400, detail="Nothing to update")
+
+        params.append(face_id)
+        db.execute(f"UPDATE faces SET {', '.join(updates)} WHERE id = ?", params)
+        db.commit()
+        row = db.execute("SELECT * FROM faces WHERE id = ?", (face_id,)).fetchone()
+        return dict_row(row)
+    finally:
+        db.close()
+
+
+@router.delete("/{face_id}")
+async def delete_face(face_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        face = db.execute("SELECT user_id FROM faces WHERE id = ?", (face_id,)).fetchone()
+        if not face:
+            raise HTTPException(status_code=404, detail="Face not found")
+        if face["user_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+
+        db.execute("DELETE FROM faces WHERE id = ?", (face_id,))
+        db.commit()
+        return {"message": "Face deleted"}
+    finally:
+        db.close()

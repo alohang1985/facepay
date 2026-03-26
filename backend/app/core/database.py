@@ -83,10 +83,19 @@ def init_db():
             expires_at TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS wishlist (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, face_id)
+        );
+
         CREATE INDEX IF NOT EXISTS idx_faces_verified ON faces(verified);
         CREATE INDEX IF NOT EXISTS idx_faces_user ON faces(user_id);
         CREATE INDEX IF NOT EXISTS idx_licenses_buyer ON licenses(buyer_id);
         CREATE INDEX IF NOT EXISTS idx_licenses_provider ON licenses(provider_id);
+        CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id);
     """)
 
     # Seed data if empty

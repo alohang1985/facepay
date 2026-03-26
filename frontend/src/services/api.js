@@ -5,7 +5,6 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem('access_token');
   const headers = { ...(token && { Authorization: `Bearer ${token}` }), ...options.headers };
 
-  // Don't set Content-Type for FormData
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
@@ -24,6 +23,8 @@ export const auth = {
   register: (data) => request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   me: () => request('/auth/me'),
+  updateProfile: (data) => request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) }),
+  changePassword: (data) => request('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 export const faces = {
@@ -32,14 +33,19 @@ export const faces = {
     return request(`/faces?${new URLSearchParams(clean)}`);
   },
   get: (id) => request(`/faces/${id}`),
-  register: (data) => {
-    const params = new URLSearchParams(data);
-    return request(`/faces?${params}`, { method: 'POST' });
-  },
+  myFaces: () => request('/faces/my/list'),
+  update: (id, data) => request(`/faces/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id) => request(`/faces/${id}`, { method: 'DELETE' }),
+  register: (data) => request('/faces', { method: 'POST', body: JSON.stringify(data) }),
   analyze: (file) => {
     const fd = new FormData();
     fd.append('file', file);
     return request('/faces/analyze', { method: 'POST', body: fd });
+  },
+  uploadImage: (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request('/faces/upload-image', { method: 'POST', body: fd });
   },
 };
 
@@ -47,6 +53,14 @@ export const licenses = {
   purchase: (data) => request('/licenses/purchase', { method: 'POST', body: JSON.stringify(data) }),
   my: () => request('/licenses/my'),
   provided: () => request('/licenses/provided'),
+  renew: (id, months = 3) => request(`/licenses/${id}/renew?months=${months}`, { method: 'POST' }),
+};
+
+export const wishlist = {
+  list: () => request('/wishlist'),
+  add: (faceId) => request(`/wishlist/${faceId}`, { method: 'POST' }),
+  remove: (faceId) => request(`/wishlist/${faceId}`, { method: 'DELETE' }),
+  check: (faceId) => request(`/wishlist/check/${faceId}`),
 };
 
 export const dashboard = {
