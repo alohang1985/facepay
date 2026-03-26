@@ -136,6 +136,14 @@ export const provider = {
   profile: (userId) => request(`/auth/provider/${userId}`),
 };
 
+export const auctions = {
+  list: (status = '') => request(`/auctions?status=${status}`),
+  get: (id) => request(`/auctions/${id}`),
+  create: (data) => request('/auctions', { method: 'POST', body: JSON.stringify(data) }),
+  bid: (id, amount) => request(`/auctions/${id}/bid`, { method: 'POST', body: JSON.stringify({ amount }) }),
+  tiers: () => request('/auctions/tiers/all'),
+};
+
 export const admin = {
   stats: () => request('/admin/stats'),
   users: (limit = 50) => request(`/admin/users?limit=${limit}`),

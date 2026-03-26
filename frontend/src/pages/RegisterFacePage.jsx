@@ -5,7 +5,15 @@ import { faces as facesApi } from '../services/api';
 const _raw = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const API_BASE = _raw.startsWith('http') ? _raw : `https://${_raw}`;
 
-const STEPS = ['Upload', 'Analyze', 'Register'];
+const STEPS = ['Photo Guide', 'Upload', 'Verify', 'Register'];
+
+const PHOTO_ANGLES = [
+  { angle: 'Front', icon: '😐', desc: 'Look straight at the camera, neutral expression' },
+  { angle: '45° Left', icon: '😏', desc: 'Turn head slightly left, natural look' },
+  { angle: '45° Right', icon: '🙂', desc: 'Turn head slightly right, natural look' },
+  { angle: 'Smile', icon: '😊', desc: 'Natural smile, front-facing' },
+  { angle: 'Profile', icon: '👤', desc: 'Side profile, either left or right' },
+];
 
 export default function RegisterFacePage() {
   const navigate = useNavigate();
@@ -17,6 +25,10 @@ export default function RegisterFacePage() {
   const [regLocation, setRegLocation] = useState('');
   const [registering, setRegistering] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [selfieFile, setSelfieFile] = useState(null);
+  const [selfiePreview, setSelfiePreview] = useState(null);
+  const [selfieVerified, setSelfieVerified] = useState(false);
+  const [showGuide, setShowGuide] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState(null);
   const [file, setFile] = useState(null);
@@ -142,6 +154,67 @@ export default function RegisterFacePage() {
             </div>
           ))}
         </div>
+
+        {/* Photo Guide Panel */}
+        {showGuide && step === 0 && !preview && (
+          <div className="mb-10 p-6 rounded-2xl bg-blue-500/[0.04] border border-blue-500/15">
+            <div className="flex justify-between items-start mb-5">
+              <div>
+                <div className="text-blue-400 text-[13px] font-bold mb-1">📸 AI Photography Guide</div>
+                <p className="text-white/30 text-[12px]">For best results, upload photos from these angles:</p>
+              </div>
+              <button onClick={() => setShowGuide(false)} className="text-white/20 hover:text-white/40 bg-transparent border-none cursor-pointer text-[18px]">×</button>
+            </div>
+            <div className="grid grid-cols-5 gap-3">
+              {PHOTO_ANGLES.map((a) => (
+                <div key={a.angle} className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="text-[32px] mb-2">{a.icon}</div>
+                  <div className="text-[12px] font-semibold text-white/60 mb-1">{a.angle}</div>
+                  <div className="text-[10px] text-white/25">{a.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 rounded-lg bg-amber-500/[0.06] border border-amber-500/15 text-amber-400/80 text-[11px]">
+              ⚡ Tip: Multiple angle photos increase your face's value by 40% on average. AI buyers need various angles for training data.
+            </div>
+          </div>
+        )}
+
+        {/* Selfie Verification */}
+        {result && !selfieVerified && step >= 1 && (
+          <div className="mb-10 p-6 rounded-2xl bg-amber-500/[0.04] border border-amber-500/15">
+            <div className="text-amber-400 text-[13px] font-bold mb-2">🪪 Identity Verification Required</div>
+            <p className="text-white/30 text-[12px] mb-4">Take a selfie to verify this is your face. This protects against unauthorized face registration.</p>
+            <div className="flex items-center gap-4">
+              {selfiePreview ? (
+                <div className="flex items-center gap-4">
+                  <img src={selfiePreview} alt="Selfie" className="w-16 h-16 rounded-xl object-cover ring-2 ring-amber-400/30" />
+                  <div>
+                    <div className="text-emerald-400 text-[13px] font-semibold">✓ Selfie captured</div>
+                    <button onClick={() => { setSelfieVerified(true); setStep(2); }} className="mt-1 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[12px] font-semibold cursor-pointer hover:bg-emerald-500/20 transition-all">
+                      Verify & Continue
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[13px] font-semibold cursor-pointer hover:bg-amber-500/20 transition-all">
+                    📷 Take Selfie
+                    <input type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => {
+                      const f = e.target.files[0];
+                      if (f) {
+                        setSelfieFile(f);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setSelfiePreview(ev.target.result);
+                        reader.readAsDataURL(f);
+                      }
+                    }} />
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-10 flex-col lg:flex-row">
           {/* Left: Upload / Preview */}

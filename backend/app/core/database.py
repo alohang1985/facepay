@@ -209,6 +209,48 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS auctions (
+            id TEXT PRIMARY KEY,
+            face_id TEXT REFERENCES faces(id) ON DELETE CASCADE,
+            provider_id TEXT REFERENCES users(id),
+            industry TEXT NOT NULL,
+            starting_price REAL NOT NULL,
+            current_price REAL NOT NULL,
+            current_bidder_id TEXT,
+            bid_count INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'live', 'ended', 'cancelled')),
+            scheduled_at TEXT NOT NULL,
+            starts_at TEXT,
+            ends_at TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS auction_bids (
+            id TEXT PRIMARY KEY,
+            auction_id TEXT REFERENCES auctions(id) ON DELETE CASCADE,
+            bidder_id TEXT REFERENCES users(id),
+            amount REAL NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS license_tiers (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            code TEXT UNIQUE NOT NULL,
+            description TEXT DEFAULT '',
+            base_multiplier REAL DEFAULT 1.0,
+            allows_commercial INTEGER DEFAULT 1,
+            allows_ai_synthesis INTEGER DEFAULT 0,
+            allows_adult INTEGER DEFAULT 0,
+            allows_print INTEGER DEFAULT 0,
+            allows_broadcast INTEGER DEFAULT 0,
+            max_impressions INTEGER DEFAULT 0,
+            category TEXT DEFAULT 'standard',
+            sort_order INTEGER DEFAULT 0
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions(status);
+        CREATE INDEX IF NOT EXISTS idx_auction_bids ON auction_bids(auction_id);
         CREATE INDEX IF NOT EXISTS idx_face_views ON face_views(face_id);
         CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
         CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
@@ -312,6 +354,23 @@ def _seed_data(cur):
             "INSERT INTO licenses (id, face_id, buyer_id, provider_id, license_type, usage_purpose, duration_months, price_paid, status, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             lic,
         )
+
+    # License tiers
+    tiers = [
+        (new_id(), "Personal SNS", "personal_sns", "Personal social media use only", 1.0, 0, 0, 0, 0, 0, 10000, "personal", 1),
+        (new_id(), "Personal Blog", "personal_blog", "Personal blog and website", 1.5, 0, 0, 0, 0, 0, 50000, "personal", 2),
+        (new_id(), "Commercial Web", "commercial_web", "Business website and online ads", 3.0, 1, 0, 0, 0, 0, 500000, "business", 3),
+        (new_id(), "Commercial Print", "commercial_print", "Print advertising and packaging", 4.0, 1, 0, 0, 1, 0, 1000000, "business", 4),
+        (new_id(), "Broadcast/TV", "broadcast", "TV, streaming, video production", 6.0, 1, 0, 0, 1, 1, 0, "business", 5),
+        (new_id(), "AI Synthesis", "ai_synthesis", "Use face for AI-generated content", 8.0, 1, 1, 0, 1, 1, 0, "ai", 6),
+        (new_id(), "Adult Content", "adult", "Adult-oriented content (18+)", 10.0, 1, 0, 1, 1, 0, 0, "restricted", 7),
+        (new_id(), "Exclusive Industry", "exclusive", "Exclusive rights within an industry", 15.0, 1, 1, 0, 1, 1, 0, "exclusive", 8),
+        (new_id(), "Full Buyout", "buyout", "Complete exclusive rights, all uses", 25.0, 1, 1, 1, 1, 1, 0, "exclusive", 9),
+    ]
+    for t in tiers:
+        cur.execute("""INSERT INTO license_tiers (id, name, code, description, base_multiplier,
+                       allows_commercial, allows_ai_synthesis, allows_adult, allows_print, allows_broadcast,
+                       max_impressions, category, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", t)
 
     # Promo codes
     cur.execute("INSERT INTO promo_codes (id, code, discount_percent, max_uses) VALUES (?, ?, ?, ?)",

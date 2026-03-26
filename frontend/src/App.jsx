@@ -23,6 +23,8 @@ import RankingsPage from './pages/RankingsPage';
 import ComparePage from './pages/ComparePage';
 import ProviderPage from './pages/ProviderPage';
 import ProtectionPage from './pages/ProtectionPage';
+import AuctionsPage from './pages/AuctionsPage';
+import LicenseTiersPage from './pages/LicenseTiersPage';
 
 export default function App() {
   return (
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/rankings" element={<RankingsPage />} />
         <Route path="/compare" element={<ComparePage />} />
         <Route path="/provider/:id" element={<ProviderPage />} />
+        <Route path="/auctions" element={<AuctionsPage />} />
+        <Route path="/license-types" element={<LicenseTiersPage />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />

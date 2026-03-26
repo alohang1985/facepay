@@ -15,6 +15,7 @@ export default function Navbar() {
 
   const links = [
     { to: '/marketplace', label: t('explore') },
+    { to: '/auctions', label: '🔨 Auctions' },
     { to: '/register-face', label: t('register') },
     { to: '/dashboard', label: t('dashboard') },
   ];
